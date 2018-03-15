@@ -176,10 +176,10 @@ void loop() {
       client.flush();
       Serial.println("We have a new client");
       client.println("Hello, client!");
+      displayMenu(&client);
       alreadyConnected = true;
     }
-    Serial.println("1"); //is the client object have an option to display amount of servers
-    
+
     //char input = displayMenu(&client);
     char input = client.read();
     
