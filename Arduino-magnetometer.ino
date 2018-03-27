@@ -83,7 +83,7 @@ void setup() {
   
   
   //Display some basic information on this sensor 
-  server.write("displaySensorDetails()");
+  //server.write("displaySensorDetails()");
 }
 
 void displayMenu( WiFiClient *client) {
@@ -161,11 +161,14 @@ void loop() {
       case '2':
         client.println("Resetting sensor not yet implemented");
         break;
+      default:
+        return;
       /*case ' ':
         return;*/
-      default:
+      /*default:
         client.println("Invalid option.");
         client.println(input);
+        break;*/
     }
     
     /*
