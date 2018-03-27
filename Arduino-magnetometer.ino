@@ -1,27 +1,6 @@
-/*
- Chat  Server
-
- A simple server that distributes any incoming messages to all
- connected clients.  To use telnet to  your device's IP address and type.
- You can see the client's input in the serial monitor as well.
-
- This example is written for a network using WPA encryption. For
- WEP or WPA, change the Wifi.begin() call accordingly.
-
-
- Circuit:
- * Arduino Primo or STAR OTTO or Uno WiFi Developer Edition (with WiFi Link firmware running)
-
- created 18 Dec 2009
- by David A. Mellis
- modified 31 May 2012
- by Tom Igoe
- modified 10 March 2017
- by Sergio Tomasello and Andrea Cannistrá
- */
-
-
 #include <WiFiLink.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_HMC5883_U.h>
 
 char ssid[] = "dem nets"; //  your network SSID (name)
 char pass[] = "SECRET_PASS";    // your network password (use for WPA, or use as key for WEP)
@@ -30,17 +9,9 @@ int keyIndex = 0;            // your network key Index number (needed only for W
 
 int status = WL_IDLE_STATUS;
 
-int hello = 1;
-
 WiFiServer server(23);
 
 boolean alreadyConnected = false; // whether or not the client was connected previously
-
-// Adafruit_Sensor - Version: Latest 
-#include <Adafruit_Sensor.h>
-
-// Adafruit_HMC5883_Unified - Version: Latest 
-#include <Adafruit_HMC5883_U.h>
 
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(11111);
 
@@ -107,16 +78,12 @@ void setup() {
   // start the server:
   server.begin();
   
-  /* Initialise the sensor */
-  if(!mag.begin())
-  {
-    /* There was a problem detecting the HMC5883 ... check your connections */
-    Serial.println("Ooops, no HMC5883 detected ... Check your wiring!");
-    while(1);
-  }
+  // Initialise the sensor goes here if not in loop
+  
+  
   
   //Display some basic information on this sensor 
-  displaySensorDetails();
+  server.write("displaySensorDetails()");
 }
 
 void displayMenu( WiFiClient *client) {
@@ -124,9 +91,7 @@ void displayMenu( WiFiClient *client) {
   client->println("Select an option: ");
   client->println(" (1) Display sensor readings");
   client->println(" (2) Reset sensor");
-  
-  return;
-}
+  }
 
 void displaySensorReadings( WiFiClient *client) {
   //* Get a new sensor event*/
@@ -170,16 +135,22 @@ void loop() {
   // wait for a new client:
   WiFiClient client = server.available();
   // when the client sends the first byte, say hello:
-  if (client) {
+  if (client.available()>0) {
     if (!alreadyConnected) {
       // clean out the input buffer:
       client.flush();
       Serial.println("We have a new client");
       client.println("Hello, client!");
-      displayMenu(&client);
+     displayMenu(&client);
       alreadyConnected = true;
     }
-
+    // Initialise the sensor
+  if(!mag.begin())
+  {
+    // There was a problem detecting the HMC5883 ... check your connections */
+    Serial.println("Ooops, no HMC5883 detected ... Check your wiring!");
+    while(1);
+  }
     //char input = displayMenu(&client);
     char input = client.read();
     
@@ -190,8 +161,11 @@ void loop() {
       case '2':
         client.println("Resetting sensor not yet implemented");
         break;
+      /*case ' ':
+        return;*/
       default:
         client.println("Invalid option.");
+        client.println(input);
     }
     
     /*
@@ -203,6 +177,9 @@ void loop() {
       // echo the bytes to the server as well:
       Serial.write(thisChar);
     }*/
+  }
+  else {
+   alreadyConnected = false;
   }
 }
 
