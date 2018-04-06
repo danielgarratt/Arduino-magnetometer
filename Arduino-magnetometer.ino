@@ -1,4 +1,5 @@
 #include <WiFiLink.h>
+#include <UnoWiFiDevEdSerial1.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_HMC5883_U.h>
 
@@ -54,6 +55,13 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+  Serial.println("initialized");
+
+  Serial1.begin(115200); // speed must match with BAUDRATE_COMMUNICATION setting in firmware config.h
+  WiFi.init(&Serial1);
+  WiFi.resetESP(); // to clear 'sockets' after sketch upload
+  delay(3000);
+  Serial.println("WiFi reset");
 
   //Check if communication with wifi module has been established
   if (WiFi.status() == WL_NO_WIFI_MODULE_COMM) {
