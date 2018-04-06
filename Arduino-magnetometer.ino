@@ -4,7 +4,7 @@
 #include <Adafruit_HMC5883_U.h>
 
 char ssid[] = "dem nets"; //  your network SSID (name)
-char pass[] = "SECRET_PASS";    // your network password (use for WPA, or use as key for WEP)
+char pass[] = "Secret_pass";    // your network password (use for WPA, or use as key for WEP)
 WiFiServer server(23);
 boolean alreadyConnected = false; // whether or not the client was connected previously
 
@@ -45,7 +45,8 @@ void loop() {
       
       switch(input) {
         case '1':
-          client.println("do stuff");
+          displaymagdets(&client);
+        //  client.println(displaymagdets());
           break;
         case '2':
           client.println("Resetting sensor not yet implemented");
@@ -120,7 +121,7 @@ void displayMagDetails() {
   sensor_t sensor;
   mag.getSensor(&sensor);
   Serial.println("------------------------------------");
-  Serial.print  ("Sensor: magnetometer array 1 "); Serial.println(sensor.name);
+  Serial.print  ("Sensor: magnetometer array 1  "); Serial.println(sensor.name);
   Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
   Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
   Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println(" uT");
@@ -129,17 +130,20 @@ void displayMagDetails() {
   Serial.println("------------------------------------");
   Serial.println("");
 }
+void displaymagdets (){
 
-
-void displayMagReadings( WiFiClient *client) {
+displayMagReadings( WiFiClient *client) {
   //* Get a new sensor event*/
   sensors_event_t event; 
   mag.getEvent(&event);
  
   // Display the results (magnetic vector values are in micro-Tesla (uT))
-  Serial.print("X: "); Serial.print(event.magnetic.x); Serial.print("  ");
+  /*Serial.print("X: "); Serial.print(event.magnetic.x); Serial.print("  ");
   Serial.print("Y: "); Serial.print(event.magnetic.y); Serial.print("  ");
-  Serial.print("Z: "); Serial.print(event.magnetic.z); Serial.print("  ");Serial.println("uT");
+  Serial.print("Z: "); Serial.print(event.magnetic.z); Serial.print("  ");Serial.println("uT");*/
+  client->print("Z: "); client->print(event.magnetic.x); client->print(" ");
+  client->print("Y: "); client->print(event.magnetic.y); client->print(" ");
+  client->print("Z: "); client->print(event.magnetic.z); client->print(" "); client->print("uT");
 
   // Hold the module so that Z is pointing 'up' and you can measure the heading with x&y
   // Calculate heading when the magnetometer is level, then correct for signs of axis.
@@ -167,4 +171,5 @@ void displayMagReadings( WiFiClient *client) {
   client->println(headingDegrees);
 
   delay(1000);
+  }
 }
