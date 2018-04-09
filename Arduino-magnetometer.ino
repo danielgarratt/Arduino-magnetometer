@@ -10,7 +10,7 @@ boolean alreadyConnected = false; // whether or not the client was connected pre
 
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(11111);
 
-boolean debug = true; // verbose serial printing
+boolean debug = false; // verbose serial printing
 
 void setup() {
   //Initialize serial and wait for port to open:
@@ -25,36 +25,37 @@ void setup() {
   configureMag();
 }
 
+
 void loop() {
   // wait for a connected client:
   WiFiClient client = server.available();
   if (client) {
     if (debug) Serial.println("Client connected");
+    if (!alreadyConnected) {
+      // clean out the input buffer:
+      client.flush();
+      Serial.println("We have a new client");
+      client.println("Hello, client!");
+      displayMenu(&client);
+      alreadyConnected = true;
+    }
     // when the client sends the first byte, say hello:
     if (client.available()>0) {
-      if (!alreadyConnected) {
-        // clean out the input buffer:
-        client.flush();
-        Serial.println("We have a new client");
-        client.println("Hello, client!");
-        displayMenu(&client);
-        alreadyConnected = true;
-      }
       //char input = displayMenu(&client);
       char input = client.read();
       
       switch(input) {
         case '1':
-          displaymagdets(&client);
+          displayMagReadings(&client);
         //  client.println(displaymagdets());
           break;
         case '2':
-          client.println("Resetting sensor not yet implemented");
+          client.println("1*");
           break;
-        default:
-          return;
+        case '3':
+          displayMenu(&client);
+          break;
       }
-
     }
   }
   else {
@@ -63,7 +64,6 @@ void loop() {
    if (debug) Serial.println("Purging connections");
   }
   if (debug) Serial.println("finished loop");
-  delay(5000);
 }
 
 
@@ -73,7 +73,6 @@ void configureWiFi() {
   WiFi.init(&Serial1);
   WiFi.resetESP(); // to clear 'sockets' after sketch upload
   delay(3000);
-  Serial.println("ESP reset");
   
   // attempt to connect to Wifi network:
   int status = WL_IDLE_STATUS;
@@ -113,7 +112,9 @@ void displayMenu( WiFiClient *client) {
   
   client->println("Select an option: ");
   client->println(" (1) Display sensor readings");
-  client->println(" (2) Reset sensor");
+  client->println(" (2) Connection test");
+  client->println(" (3) Replay this menu");
+  client->println("*");
 }
 
 
@@ -130,46 +131,22 @@ void displayMagDetails() {
   Serial.println("------------------------------------");
   Serial.println("");
 }
-void displaymagdets (){
 
-displayMagReadings( WiFiClient *client) {
+
+void displayMagReadings( WiFiClient *client) {
   //* Get a new sensor event*/
   sensors_event_t event; 
   mag.getEvent(&event);
  
   // Display the results (magnetic vector values are in micro-Tesla (uT))
-  /*Serial.print("X: "); Serial.print(event.magnetic.x); Serial.print("  ");
-  Serial.print("Y: "); Serial.print(event.magnetic.y); Serial.print("  ");
-  Serial.print("Z: "); Serial.print(event.magnetic.z); Serial.print("  ");Serial.println("uT");*/
-  client->print("Z: "); client->print(event.magnetic.x); client->print(" ");
-  client->print("Y: "); client->print(event.magnetic.y); client->print(" ");
-  client->print("Z: "); client->print(event.magnetic.z); client->print(" "); client->print("uT");
-
-  // Hold the module so that Z is pointing 'up' and you can measure the heading with x&y
-  // Calculate heading when the magnetometer is level, then correct for signs of axis.
-  float heading = atan2(event.magnetic.y, event.magnetic.x);
-  
-  // Once you have your heading, you must then add your 'Declination Angle', which is the 'Error' of the magnetic field in your location.
-  // Find yours here: http://www.magnetic-declination.com/
-  // Seattle is: +15* 45' E, which is ~15 Degrees, or (which we need) 0.26 radians
-  // If you cannot find your Declination, comment out these two lines, your compass will be slightly off.
-  float declinationAngle = 0.26;
-  heading += declinationAngle;
-  
-  // Correct for when signs are reversed.
-  if(heading < 0)
-    heading += 2*PI;
-    
-  // Check for wrap due to addition of declination.
-  if(heading > 2*PI)
-    heading -= 2*PI;
-   
-  // Convert radians to degrees for readability.
-  float headingDegrees = heading * 180/M_PI; 
-  
-  Serial.print("Heading (degrees): "); Serial.println(headingDegrees);
-  client->println(headingDegrees);
-
-  delay(1000);
+  client->print("[");client->print(event.magnetic.x);
+  client->print(", ");client->print(event.magnetic.y);
+  client->print(", ");client->print(event.magnetic.z);
+  client->println("]*");
+  if (debug) {
+    Serial.print("X: "); Serial.print(event.magnetic.x); Serial.print("  ");
+    Serial.print("Y: "); Serial.print(event.magnetic.y); Serial.print("  ");
+    Serial.print("Z: "); Serial.print(event.magnetic.z); Serial.print("  ");Serial.println("uT");
   }
+
 }
