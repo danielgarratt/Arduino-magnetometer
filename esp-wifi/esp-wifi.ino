@@ -5,7 +5,9 @@
 const char * ssid = "dem nets";
 const char * password = "Secret_pass";
 
-IPAddress ip(10, 0, 0, 91); 
+IPAddress ip(10, 0, 0, 41);
+IPAddress gate(10, 0, 0, 1);
+IPAddress net(255, 255, 255, 0);
 WiFiServer server(23);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
 
@@ -104,6 +106,7 @@ void connectToWiFi(const char * ssid, const char * pwd)
   printLine();
   Serial.println("Connecting to WiFi network: " + String(ssid));
 
+  WiFi.config(ip, gate, net);
   WiFi.begin(ssid, pwd);
 
   while (WiFi.status() != WL_CONNECTED) 
