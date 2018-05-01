@@ -76,26 +76,13 @@ void loop() {
         }
       }
     }
-    //check UART for data
-    if(Serial1.available()){
-      size_t len = Serial1.available();
-      uint8_t sbuf[len];
-      Serial1.readBytes(sbuf, len);
-      //push UART data to all connected telnet clients
-      for(i = 0; i < MAX_SRV_CLIENTS; i++){
-        if (serverClients[i] && serverClients[i].connected()){
-          serverClients[i].write(sbuf, len);
-          delay(1);
-        }
-      }
-    }
   }
   else {
     Serial.println("WiFi not connected!");
     for(i = 0; i < MAX_SRV_CLIENTS; i++) {
       if (serverClients[i]) serverClients[i].stop();
     }
-    delay(1000);
+    delay(100);
   }
 }
 
