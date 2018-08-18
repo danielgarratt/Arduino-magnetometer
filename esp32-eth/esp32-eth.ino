@@ -7,6 +7,11 @@
 
 static bool eth_connected = false;
 
+IPAddress ip(192, 168, 0, 90);
+IPAddress gate(192, 168, 0, 1);
+IPAddress mask(255, 255, 255, 0);
+IPAddress dns(75, 75, 75, 75);
+
 void WiFiEvent(WiFiEvent_t event)
 {
   switch (event) {
@@ -69,6 +74,7 @@ void setup()
   Serial.begin(115200);
   WiFi.onEvent(WiFiEvent);
   ETH.begin();
+  ETH.config(ip,gate,mask,dns);
 }
 
 
