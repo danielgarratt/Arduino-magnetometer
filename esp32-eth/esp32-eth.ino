@@ -5,12 +5,17 @@
 
 #include <ETH.h>
 
+//Network related
 static bool eth_connected = false;
-
-IPAddress ip(192, 168, 0, 90);
-IPAddress gate(192, 168, 0, 1);
+IPAddress ip(10, 0, 0, 40);
+IPAddress gate(10, 0, 0, 1);
 IPAddress mask(255, 255, 255, 0);
-IPAddress dns(75, 75, 75, 75);
+IPAddress dns(10, 0, 0, 1);
+
+//Server related
+#define MAX_SRV_CLIENTS 1
+WiFiServer server(23);
+WiFiClient serverClients[MAX_SRV_CLIENTS];
 
 void WiFiEvent(WiFiEvent_t event)
 {
@@ -72,16 +77,66 @@ void testClient(const char * host, uint16_t port)
 void setup()
 {
   Serial.begin(115200);
+
   WiFi.onEvent(WiFiEvent);
   ETH.begin();
   ETH.config(ip,gate,mask,dns);
+
+  server.begin();
+  server.setNoDelay(true);
 }
 
 
 void loop()
 {
+  uint8_t i;
   if (eth_connected) {
-    testClient("google.com", 80);
+    //check if there are any new clients
+    if (server.hasClient()){
+      for(i = 0; i < MAX_SRV_CLIENTS; i++){
+        //find free/disconnected spot
+        if (!serverClients[i] || !serverClients[i].connected()){
+          if(serverClients[i]) serverClients[i].stop();
+          serverClients[i] = server.available();
+          if (!serverClients[i]) Serial.println("available broken");
+          Serial.print("New client: ");
+          Serial.print(i); Serial.print(' ');
+          Serial.println(serverClients[i].remoteIP());
+          serverClients[i].println("Hello client!");
+          break;
+        }
+      }
+      if (i >= MAX_SRV_CLIENTS) {
+        //no free/disconnected spot so reject
+        server.available().stop();
+      }
+    }
+    //check clients for data
+    for(i = 0; i < MAX_SRV_CLIENTS; i++){
+      if (serverClients[i] && serverClients[i].connected()){
+        if(serverClients[i].available()){
+          char input = serverClients[i].read();
+
+          switch(input) {
+              case '1':
+                break;
+              case '2':
+                serverClients[i].println("1*");
+                break;
+            }
+        }
+      }
+      else {
+        if (serverClients[i]) {
+          serverClients[i].stop();
+        }
+      }
+    }
+  } else {
+    Serial.println("ETH not connected!");
+    delay(100);
+    for(i = 0; i < MAX_SRV_CLIENTS; i++) {
+      if (serverClients[i]) serverClients[i].stop();
+    }
   }
-  delay(10000);
 }

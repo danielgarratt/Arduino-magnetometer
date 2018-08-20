@@ -13,8 +13,6 @@ WiFiClient serverClients[MAX_SRV_CLIENTS];
 
 const int LED_PIN = 5;
 
-HardwareSerial Serial1(2);  // UART1/Serial1 pins 16,17
-
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
@@ -23,7 +21,6 @@ void setup() {
   connectToWiFi(ssid, password);
 
   //start UART and the server
-  Serial1.begin(9600);
   server.begin();
   server.setNoDelay(true);
 
